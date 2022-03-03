@@ -1,6 +1,5 @@
 package com.weareadaptive.auction.model;
 
-import com.weareadaptive.auction.exception.EntityNotFoundException;
 import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotNull;

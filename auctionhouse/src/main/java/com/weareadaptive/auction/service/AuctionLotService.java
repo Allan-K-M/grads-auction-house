@@ -1,7 +1,7 @@
 package com.weareadaptive.auction.service;
 
-import static java.lang.String.format;
 
+import com.weareadaptive.auction.model.AuctionLot;
 import com.weareadaptive.auction.model.AuctionState;
 import com.weareadaptive.auction.model.UserState;
 import org.springframework.stereotype.Service;
@@ -15,5 +15,13 @@ public class AuctionLotService {
   public AuctionLotService(AuctionState auctionState, UserState userState) {
     this.auctionState = auctionState;
     this.userState = userState;
+  }
+
+  public AuctionLot create( String owner, String symbol, int quantity, double minPrice) {
+    var user = userState.getByUsername(owner).get();
+    var id=auctionState.nextId();
+    var auctionLot = new AuctionLot(id, user, symbol, quantity, minPrice);
+    auctionState.add(auctionLot);
+    return auctionLot;
   }
 }

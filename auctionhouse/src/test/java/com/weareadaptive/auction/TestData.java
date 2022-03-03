@@ -13,18 +13,27 @@ import org.springframework.stereotype.Component;
 public class TestData {
   public static final String PASSWORD = "mypassword";
   public static final String ADMIN_AUTH_TOKEN = "Bearer ADMIN:adminpassword";
+  public static final String USER_AUTH_TOKEN = "Bearer USER:userpassword";
+
 
   private final UserService userService;
+  private final AuctionLotService auctionLotService;
   private final Faker faker;
   private User user1;
   private User user2;
   private User user3;
   private User user4;
+  private AuctionLot auctionLot1;
+  private AuctionLot auctionLot2;
+  private AuctionLot auctionLot3;
 
-  public TestData(UserService userService) {
+
+  public TestData(UserService userService, AuctionLotService auctionLotService) {
     this.userService = userService;
+    this.auctionLotService = auctionLotService;
     faker = new Faker();
   }
+
 
   @EventListener(ApplicationReadyEvent.class)
   public void createInitData() {
@@ -32,12 +41,23 @@ public class TestData {
     user2 = createRandomUser();
     user3 = createRandomUser();
     user4 = createRandomUser();
+    auctionLot1=createRandomAuction();
+    auctionLot2=createRandomAuction();
+    auctionLot3=createRandomAuction();
   }
 
   public User user1() {
     return user1;
   }
-
+  public AuctionLot auctionLot1() {
+    return auctionLot1;
+  }
+  public AuctionLot auctionLot2() {
+    return auctionLot2;
+  }
+  public AuctionLot auctionLot3() {
+    return auctionLot3;
+  }
   public User user2() {
     return user2;
   }
@@ -76,6 +96,14 @@ public class TestData {
         faker.company().name()
     );
     return user;
+  }
+  public AuctionLot createRandomAuction(){
+    var auctionLot= auctionLotService.create(
+      createRandomUser().getUsername(),
+      faker.animal().toString(),
+      faker.number().randomDigitNotZero(),
+      faker.number().randomDouble(2,2,100));
+    return auctionLot;
   }
 
   public String getToken(User user) {

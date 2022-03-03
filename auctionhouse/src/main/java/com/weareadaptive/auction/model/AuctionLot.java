@@ -1,5 +1,11 @@
 package com.weareadaptive.auction.model;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
 import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.math.BigDecimal.valueOf;
@@ -8,12 +14,6 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.comparingInt;
 import static org.apache.logging.log4j.util.Strings.isBlank;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
 
 public class AuctionLot implements Entity {
   private final int id;
@@ -38,6 +38,9 @@ public class AuctionLot implements Entity {
     }
     if (quantity < 0) {
       throw new BusinessException("quantity must be above 0");
+    }
+    if (owner.isBlocked()) {
+      throw new BusinessException("Owner can not create an auction");
     }
     this.id = id;
     this.owner = owner;
@@ -100,10 +103,10 @@ public class AuctionLot implements Entity {
     status = Status.CLOSED;
 
     var orderedBids = bids
-        .stream()
-        .sorted(reverseOrder(comparing(Bid::getPrice))
-            .thenComparing(reverseOrder(comparingInt(Bid::getQuantity))))
-        .toList();
+      .stream()
+      .sorted(reverseOrder(comparing(Bid::getPrice))
+        .thenComparing(reverseOrder(comparingInt(Bid::getQuantity))))
+      .toList();
     var availableQuantity = this.quantity;
     var revenue = BigDecimal.ZERO;
     var winningBids = new ArrayList<WinningBid>();
@@ -122,8 +125,8 @@ public class AuctionLot implements Entity {
     }
 
     closingSummary =
-        new ClosingSummary(unmodifiableList(winningBids), this.quantity - availableQuantity,
-            revenue, timeProvider.get());
+      new ClosingSummary(unmodifiableList(winningBids), this.quantity - availableQuantity,
+        revenue, timeProvider.get());
   }
 
   public int getId() {
@@ -144,26 +147,26 @@ public class AuctionLot implements Entity {
 
   public List<Bid> getLostBids(User user) {
     return bids
-        .stream()
-        .filter(bid -> bid.getUser() == user
-            && closingSummary.winningBids().stream().noneMatch(wb -> wb.originalBid() == bid))
-        .toList();
+      .stream()
+      .filter(bid -> bid.getUser() == user
+        && closingSummary.winningBids().stream().noneMatch(wb -> wb.originalBid() == bid))
+      .toList();
   }
 
   public List<WinningBid> getWonBids(User user) {
     return closingSummary.winningBids()
-        .stream()
-        .filter(b -> b.originalBid().getUser() == user)
-        .toList();
+      .stream()
+      .filter(b -> b.originalBid().getUser() == user)
+      .toList();
   }
 
   @Override
   public String toString() {
     return "AuctionLot{"
-        + "owner=" + owner
-        + ", title='" + symbol + '\''
-        + ", status=" + status
-        + '}';
+      + "owner=" + owner
+      + ", title='" + symbol + '\''
+      + ", status=" + status
+      + '}';
   }
 
   public enum Status {

@@ -35,13 +35,8 @@ public class UserController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   UserResponse create(@RequestBody @Valid CreateUserRequest createUserRequest) {
-    String username = createUserRequest.username();
-    String password = createUserRequest.password();
-    String firstName = createUserRequest.firstName();
-    String lastName = createUserRequest.lastName();
-    String organisation = createUserRequest.organisation();
 
-    return map(userService.create(username, password, firstName, lastName, organisation));
+    return map(userService.create(createUserRequest.username(), createUserRequest.password(), createUserRequest.firstName(), createUserRequest.lastName(), createUserRequest.organisation()));
   }
 
   @GetMapping("/{id}")
