@@ -194,6 +194,7 @@ public class UserControllerTest {
         .then()
             .statusCode(HttpStatus.OK.value())
             .body("id", equalTo(newUser.getId()))
+            .body("username",equalTo(newUser.getUsername()))
             .body("firstName", equalTo(updateRequest.firstName()))
             .body("lastName", equalTo(updateRequest.lastName()))
             .body("organisation", equalTo(updateRequest.organisation()));

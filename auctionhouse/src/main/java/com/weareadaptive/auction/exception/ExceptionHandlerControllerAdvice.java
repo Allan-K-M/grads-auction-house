@@ -1,14 +1,14 @@
 package com.weareadaptive.auction.exception;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
-
 import com.weareadaptive.auction.model.BusinessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
 
 @ControllerAdvice
 public class ExceptionHandlerControllerAdvice {
@@ -39,5 +39,11 @@ public class ExceptionHandlerControllerAdvice {
           ex.getMessage()),
         headers,
         BAD_REQUEST);
+  }
+
+  @ExceptionHandler(EntityNotFoundException.class)
+  public ResponseEntity<Object> handleEntityNotFoundException(
+    EntityNotFoundException ex) {
+    return ResponseEntity.notFound().build();
   }
 }

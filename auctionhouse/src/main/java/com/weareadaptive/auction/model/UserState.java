@@ -1,15 +1,17 @@
 package com.weareadaptive.auction.model;
 
-import static java.lang.String.format;
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.groupingBy;
+import com.weareadaptive.auction.exception.EntityNotFoundException;
+import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.validation.constraints.NotNull;
-import org.springframework.stereotype.Component;
+
+import static java.lang.String.format;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.groupingBy;
 
 @Component
 public class UserState extends State<User> {
@@ -45,23 +47,10 @@ public class UserState extends State<User> {
   }
 
   public List<String> findOrganisations() {
-    return stream()
-        .filter(u -> !u.isAdmin())
-        .map(User::getOrganisation)
-        .distinct()
-        .sorted()
-        .toList();
+    return stream().filter(u -> !u.isAdmin()).map(User::getOrganisation).distinct().sorted().toList();
   }
 
   public List<OrganisationDetails> getOrganisationsDetails() {
-    return stream()
-        .filter(u -> !u.isAdmin())
-        .collect(groupingBy(User::getOrganisation))
-        .entrySet()
-        .stream()
-        .map(e -> new OrganisationDetails(e.getKey(), e.getValue()))
-        .sorted(comparing(OrganisationDetails::organisationName))
-        .toList();
+    return stream().filter(u -> !u.isAdmin()).collect(groupingBy(User::getOrganisation)).entrySet().stream().map(e -> new OrganisationDetails(e.getKey(), e.getValue())).sorted(comparing(OrganisationDetails::organisationName)).toList();
   }
-
 }
