@@ -1,6 +1,7 @@
 package com.weareadaptive.auction.service;
 
 
+import com.weareadaptive.auction.exception.UnauthorizedActivityException;
 import com.weareadaptive.auction.model.AuctionLot;
 import com.weareadaptive.auction.model.AuctionState;
 import com.weareadaptive.auction.model.Bid;
@@ -8,6 +9,7 @@ import com.weareadaptive.auction.model.BusinessException;
 import com.weareadaptive.auction.model.UserState;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -23,7 +25,7 @@ public class AuctionLotService {
   }
 
   public AuctionLot create(String owner, String symbol, int quantity, double minPrice) {
-    var user = userState.getByUsername(owner).get();
+    var user = userState.getByUsername(owner).orElseThrow(() -> new BusinessException("Invalid User Id"));
     var id = auctionState.nextId();
     var auctionLot = new AuctionLot(id, user, symbol, quantity, minPrice);
     auctionState.add(auctionLot);
@@ -43,5 +45,13 @@ public class AuctionLotService {
     var bidder = userState.getByUsername(userName).orElseThrow(() -> new BusinessException("Invalid User Id"));
     auction.bid(bidder, quantity, price);
     return new Bid(bidder, quantity, price);
+  }
+
+  public List<Bid> getAllAuctionBids(String username, int id) {
+    AuctionLot auctionLot = auctionState.get(id);
+  if (auctionLot.getOwner().getUsername().equals(username)) {
+     return auctionLot.getBids();
+    }
+    throw new UnauthorizedActivityException("User can not view Bids");
   }
 }
