@@ -1,12 +1,10 @@
 package com.weareadaptive.auction.controller;
 
-import static com.weareadaptive.auction.TestData.ADMIN_AUTH_TOKEN;
-import static com.weareadaptive.auction.TestData.USER_AUTH_TOKEN;
 import com.github.javafaker.Faker;
 import com.weareadaptive.auction.TestData;
 import com.weareadaptive.auction.controller.dto.CreateAuctionRequest;
 import com.weareadaptive.auction.model.AuctionLot;
-import com.weareadaptive.auction.model.User;
+import com.weareadaptive.auction.model.AuctionState;
 import com.weareadaptive.auction.service.AuctionLotService;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,10 +16,11 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.containsString;
+import static java.lang.String.format;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AuctionControllerTest {
@@ -53,66 +52,96 @@ public class AuctionControllerTest {
       .header(AUTHORIZATION, testData.user1Token())
       .contentType(ContentType.JSON)
       .body(createAuctionRequest)
-    .when()
+      .when()
       .post("/auctions")
-    .then()
+      .then()
       .statusCode(HttpStatus.CREATED.value())
-      .body("id",greaterThan(0))
+      .body("id", greaterThan(0))
       .body("minPrice", equalTo(10.0F))
       .body("symbol", equalTo("FB"))
       .body("quantity", equalTo(100));
-        //.body("status", equalTo());
+    //.body("status", equalTo());
     //@formatter:on
   }
 
-  @DisplayName("should throw Business Exception if Auction already exists")
-  @Test
-  public void shouldThrowIfCreatedAuctionExists(){
- //create auction eveerytime with real values to be coherent
-   String symbol=testData.auctionLot1().getSymbol();
-   User owner=testData.auctionLot1().getOwner();
-   double minPrice=testData.auctionLot1().getMinPrice();
-   int quantity=testData.auctionLot1().getQuantity();
-    AuctionLot.Status status=testData.auctionLot1().getStatus();
 
-   var createAuctionRequest=new CreateAuctionRequest(symbol,minPrice,quantity);
-    //@formatter:off
-      given()
-        .baseUri(uri)
-        .header(AUTHORIZATION, testData.getToken(owner))
-        .contentType(ContentType.JSON)
-        .body(createAuctionRequest)
+  @DisplayName("create should throw an Authoro")
+  @Test
+  public void createShouldThrowIfUserCreatingAuctionIsBlocked() {
+    testData.user1().block();
+    var quantity = 100;
+    var minCost = 100.0;
+
+    var createAuctionRequest = new CreateAuctionRequest("APPL", minCost, quantity);
+
+    given()
+      .baseUri(uri)
+      .header(AUTHORIZATION, testData.user1Token())
+      .contentType(ContentType.JSON)
+      .body(createAuctionRequest)
       .when()
-        .post("/auctions")
+      .post("/auctions")
       .then()
-      .statusCode(HttpStatus.BAD_REQUEST.value())
-      .body("message", containsString("already exist"));
+      .statusCode(HttpStatus.UNAUTHORIZED.value());
+
 
   }
 
-  @DisplayName("Should throw an Authoro")
+  @DisplayName("getAuctions shold return a list of all user Auctions")
   @Test
-  public void shouldThrowIfUserCreatingAuctionIsBlocked(){
-    testData.user2().block();
-    var name = faker.name();
-    var quantity = faker.number().numberBetween(2,100);
-    var minCost=faker.number().randomDouble(2,2,100);
+  public void getAuctionsShouldReturnAllUserAuctions() {
+    auctionLotService.create(testData.user1().getUsername(), "APPLE", 34, 45.99);
 
-    var createAuctionRequest = new CreateAuctionRequest(faker.animal().toString(), minCost, quantity);
-
-      given()
-        .baseUri(uri)
-        .header(AUTHORIZATION, testData.getToken(testData.user2()))
-        .contentType(ContentType.JSON)
-        .body(createAuctionRequest)
+    given()
+      .baseUri(uri)
+      .header(AUTHORIZATION, testData.user1Token())
       .when()
-        .post("/auction")
+      .get("auictions/owner")
       .then()
-      .statusCode(HttpStatus.BAD_REQUEST.value())
-      .body("message", containsString("already exist"));
+      .body( "owner", equalTo(testData.user1().getUsername()))
+      .body("symbol", equalTo("APPLE"))
+      .body("quantity", equalTo(34))
+      .body("minPrice", equalTo(45.99));
+  }
 
+  @DisplayName("Should return Auction with given Id")
+  @Test
+  public void getAuctionByIdShouldReturnAuction(){
+    auctionLotService.create(testData.user1().getUsername(),"ORANGE",45,33.65);
 
+    AuctionLot auctionLot=new AuctionLot(122,testData.user1(),"ORANGE",45,33.65);
+    AuctionState auctionState=new AuctionState();
+    auctionState.add(auctionLot);
+
+    given()
+      .baseUri(uri)
+      .header(AUTHORIZATION,testData.user1Token())
+      .pathParam("id", testData.auctionLot1().getId())
+      .when()
+      .get("auctions/{id}")
+      .then()
+      .statusCode(HttpStatus.NO_CONTENT.value())
+      .body("owner",equalTo(testData.user1().getUsername()))
+      .body("symbol", equalTo("ORANGE"))
+      .body("quantity", equalTo(45))
+      .body("minPrice", equalTo(33.65));
+  }
+@DisplayName("get Auction by Id should throw if auction does not Exit")
+@Test
+  public void  getAuctionByIdShouldThrowIfAuctionDoesNotExist(){
+    given()
+      .baseUri(uri)
+      .header(AUTHORIZATION,testData.user1Token())
+      .pathParam("id", INVALID_AUCTION_ID)
+      .when()
+      .get("auctions/{id}")
+      .then()
+      .statusCode(NOT_FOUND.value());
+  }
+
+  public void bidShouldReturnBidIfBidIsValid(){
 
   }
+
 
 }
