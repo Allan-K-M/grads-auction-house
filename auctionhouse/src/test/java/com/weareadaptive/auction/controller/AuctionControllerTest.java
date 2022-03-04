@@ -17,7 +17,10 @@ import org.springframework.http.HttpStatus;
 
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.equalToObject;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -87,36 +90,35 @@ public class AuctionControllerTest {
 
   }
 
-  @DisplayName("getAuctions shold return a list of all user Auctions")
+  @DisplayName("getAuctions should return a list of all user Auctions")
   @Test
   public void getAuctionsShouldReturnAllUserAuctions() {
-    auctionLotService.create(testData.user1().getUsername(), "APPLE", 34, 45.99);
+
+    var find1 = format("find { it.id == %s }.", testData.auctionLot1().getId());
 
     given()
       .baseUri(uri)
       .header(AUTHORIZATION, testData.user1Token())
       .when()
-      .get("auictions/owner")
+      .get("auctions/owner")
       .then()
-      .body( "owner", equalTo(testData.user1().getUsername()))
-      .body("symbol", equalTo("APPLE"))
-      .body("quantity", equalTo(34))
-      .body("minPrice", equalTo(45.99));
+      .log()
+      .all()
+      .body( find1+"owner", equalTo(testData.user1().getUsername()))
+      .body(find1+"symbol", equalTo("ORANGE"))
+      .body(find1+"quantity", equalTo(34))
+      .body(find1+"minPrice", equalTo(45.78F));
   }
 
   @DisplayName("Should return Auction with given Id")
   @Test
   public void getAuctionByIdShouldReturnAuction(){
-    auctionLotService.create(testData.user1().getUsername(),"ORANGE",45,33.65);
-
-    AuctionLot auctionLot=new AuctionLot(122,testData.user1(),"ORANGE",45,33.65);
-    AuctionState auctionState=new AuctionState();
-    auctionState.add(auctionLot);
+     AuctionLot auctionLot=auctionLotService.create(testData.user1().getUsername(),"ORANGE",45,33.65);
 
     given()
       .baseUri(uri)
       .header(AUTHORIZATION,testData.user1Token())
-      .pathParam("id", testData.auctionLot1().getId())
+      .pathParam("id", auctionLot.getId())
       .when()
       .get("auctions/{id}")
       .then()

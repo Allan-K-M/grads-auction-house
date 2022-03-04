@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.security.Principal;
-import java.util.List;
+import java.util.stream.Stream;
 
 import static com.weareadaptive.auction.controller.AuctionMapper.map;
 
@@ -41,8 +41,8 @@ public class AuctionLotController {
   }
 
   @GetMapping("/owner")
-  List<AuctionResponse> getAllUserAuctions(Principal principal) {
-    return auctionLotService.getAllAuctions(principal.getName()).map(AuctionMapper::map).toList();
+  Stream<AuctionResponse> getAllUserAuctions(Principal principal) {
+    return auctionLotService.getAllAuctions(principal.getName()).map(AuctionMapper::map);
   }
 
   @ResponseStatus(HttpStatus.NO_CONTENT)

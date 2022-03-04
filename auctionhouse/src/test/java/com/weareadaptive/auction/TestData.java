@@ -98,11 +98,12 @@ public class TestData {
     return user;
   }
   public AuctionLot createRandomAuction(){
+  ;
     var auctionLot= auctionLotService.create(
-      createRandomUser().getUsername(),
-      faker.animal().toString(),
-      faker.number().randomDigitNotZero(),
-      faker.number().randomDouble(2,2,100));
+      user1.getUsername(),
+      "ORANGE",
+      34,
+      45.78);
     return auctionLot;
   }
 
