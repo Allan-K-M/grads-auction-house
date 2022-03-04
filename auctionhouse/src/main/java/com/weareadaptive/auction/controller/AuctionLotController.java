@@ -9,6 +9,7 @@ import com.weareadaptive.auction.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,9 +46,9 @@ public class AuctionLotController {
     return auctionLotService.getAllAuctions(principal.getName()).map(AuctionMapper::map);
   }
 
-  @ResponseStatus(HttpStatus.NO_CONTENT)
+
   @GetMapping("/{id}")
-  AuctionResponse getAuctionById(@RequestBody @Valid int id) {
+  AuctionResponse getAuctionById(@PathVariable int id) {
     AuctionLot auctionLot = auctionLotService.getAuctionById(id).orElseThrow(() -> new EntityNotFoundException("Invalid Auction Id"));
     return map(auctionLot);
   }

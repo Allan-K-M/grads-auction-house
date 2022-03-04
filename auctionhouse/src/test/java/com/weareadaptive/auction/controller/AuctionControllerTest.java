@@ -2,6 +2,7 @@ package com.weareadaptive.auction.controller;
 
 import com.github.javafaker.Faker;
 import com.weareadaptive.auction.TestData;
+import com.weareadaptive.auction.controller.dto.AuctionResponse;
 import com.weareadaptive.auction.controller.dto.CreateAuctionRequest;
 import com.weareadaptive.auction.model.AuctionLot;
 import com.weareadaptive.auction.model.AuctionState;
@@ -15,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 
+import static com.weareadaptive.auction.TestData.ADMIN_AUTH_TOKEN;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static org.hamcrest.Matchers.contains;
@@ -122,11 +124,11 @@ public class AuctionControllerTest {
       .when()
       .get("auctions/{id}")
       .then()
-      .statusCode(HttpStatus.NO_CONTENT.value())
+      .statusCode(HttpStatus.OK.value())
       .body("owner",equalTo(testData.user1().getUsername()))
       .body("symbol", equalTo("ORANGE"))
       .body("quantity", equalTo(45))
-      .body("minPrice", equalTo(33.65));
+      .body("minPrice", equalTo(33.65F));
   }
 @DisplayName("get Auction by Id should throw if auction does not Exit")
 @Test
