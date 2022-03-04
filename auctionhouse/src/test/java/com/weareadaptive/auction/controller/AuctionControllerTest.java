@@ -168,5 +168,41 @@ public class AuctionControllerTest {
 
   }
 
+  @DisplayName("bid should throw a business exception if auction id is invalid")
+  @Test
+  public void bidShouldThrowIfAuctionIdIsInvalid(){
+
+    BidRequest bidRequest=new BidRequest(3, 45.99);
+    given()
+      .baseUri(uri)
+      .header(AUTHORIZATION,testData.user2Token())
+      .pathParam("id",INVALID_AUCTION_ID)
+      .contentType(ContentType.JSON)
+      .body(bidRequest)
+      .when()
+      .post("auctions/bids/{id}")
+      .then()
+      .statusCode(HttpStatus.BAD_REQUEST.value());
+
+
+  }
+
+  @DisplayName("Should throw if User tries to bid on their own Auction")
+  @Test
+  public void shouldThrowIfUserCanNotBid(){
+    BidRequest bidRequest=new BidRequest(3,45.99);
+
+    given()
+      .baseUri(uri)
+      .header(AUTHORIZATION,testData.user1Token())
+      .contentType(ContentType.JSON)
+      .body(bidRequest)
+      .pathParam("id",testData.auctionLot1().getId())
+      .when()
+      .post("auctions/bids/{id}")
+      .then()
+      .statusCode(HttpStatus.BAD_REQUEST.value());
+  }
+
 
 }
