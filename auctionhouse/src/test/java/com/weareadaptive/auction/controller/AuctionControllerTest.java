@@ -3,6 +3,7 @@ package com.weareadaptive.auction.controller;
 import com.github.javafaker.Faker;
 import com.weareadaptive.auction.TestData;
 import com.weareadaptive.auction.controller.dto.AuctionResponse;
+import com.weareadaptive.auction.controller.dto.BidRequest;
 import com.weareadaptive.auction.controller.dto.CreateAuctionRequest;
 import com.weareadaptive.auction.model.AuctionLot;
 import com.weareadaptive.auction.model.AuctionState;
@@ -143,7 +144,27 @@ public class AuctionControllerTest {
       .statusCode(NOT_FOUND.value());
   }
 
+  @DisplayName("Should return bid response if bid created is valid")
+  @Test
   public void bidShouldReturnBidIfBidIsValid(){
+
+    BidRequest bidRequest=new BidRequest(3, 45.99);
+
+    given()
+      .baseUri(uri)
+      .header(AUTHORIZATION,testData.user2Token())
+      .pathParam("id",testData.auctionLot1().getId())
+      .contentType(ContentType.JSON)
+      .body(bidRequest)
+      .when()
+      .post("auctions/bids/{id}")
+      .then()
+      .statusCode(HttpStatus.CREATED.value())
+      .body("ownerUsername",equalTo(testData.user2().getUsername()))
+      .body("auctionId",equalTo(testData.auctionLot1().getId()))
+      .body("quantity", equalTo(bidRequest.quantity()))
+      .body("price", equalTo(45.99F));
+
 
   }
 

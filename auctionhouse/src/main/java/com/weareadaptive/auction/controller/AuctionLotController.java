@@ -1,9 +1,12 @@
 package com.weareadaptive.auction.controller;
 
 import com.weareadaptive.auction.controller.dto.AuctionResponse;
+import com.weareadaptive.auction.controller.dto.BidRequest;
+import com.weareadaptive.auction.controller.dto.BidResponse;
 import com.weareadaptive.auction.controller.dto.CreateAuctionRequest;
 import com.weareadaptive.auction.exception.EntityNotFoundException;
 import com.weareadaptive.auction.model.AuctionLot;
+import com.weareadaptive.auction.model.Bid;
 import com.weareadaptive.auction.service.AuctionLotService;
 import com.weareadaptive.auction.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -21,6 +24,7 @@ import java.security.Principal;
 import java.util.stream.Stream;
 
 import static com.weareadaptive.auction.controller.AuctionMapper.map;
+import static com.weareadaptive.auction.controller.BidMapper.mapBid;
 
 @RestController
 @RequestMapping("/auctions")
@@ -53,6 +57,13 @@ public class AuctionLotController {
     return map(auctionLot);
   }
 
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping("/bids/{id}")
+  BidResponse bid(@RequestBody @Valid BidRequest bidRequest, Principal principal, @PathVariable int id) {
+    Bid bid = auctionLotService.bid(id, principal.getName(), bidRequest.quantity(), bidRequest.price());
+    return mapBid(bid, id);
+
+  }
 
 
 }
