@@ -17,7 +17,6 @@ import com.github.javafaker.Faker;
 import com.weareadaptive.auction.TestData;
 import com.weareadaptive.auction.controller.dto.CreateUserRequest;
 import com.weareadaptive.auction.controller.dto.UpdateUserRequest;
-import com.weareadaptive.auction.service.UserService;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,8 +30,7 @@ import org.springframework.http.HttpStatus;
 public class UserControllerTest {
   public static final int INVALID_USER_ID = 99999;
 
-  @Autowired
-  private UserService userService;
+
   @Autowired
   private TestData testData;
   @LocalServerPort

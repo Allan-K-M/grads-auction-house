@@ -239,30 +239,31 @@ public class AuctionControllerTest {
   @DisplayName("Should return closing summary if user is owner")
   @Test
   public void closeAuctionShouldReturnSummary(){
-    var auction1=auctionLotService.create(testData.user3().getUsername(),"MANGO",50,23.00);
-    var bid1=auctionLotService.bid(auction1.getId(),testData.user1().getUsername(),10,25.00);
-    var bid2=auctionLotService.bid(auction1.getId(),testData.user2().getUsername(),10,27.00);
+    var bid1=auctionLotService.bid(testData.auctionLot2().getId(),testData.user2().getUsername(),10,125.00);
+    var bid2=auctionLotService.bid(testData.auctionLot2().getId(),testData.user3().getUsername(),10,127.00);
 
-    var find1 = format("winningBids.find { it.username == '%s' }.", testData.user1().getUsername());
 
-    var find2 = format("list.find { it.username == '%s' }.", testData.user2().getUsername());
+    var find1 = format("winningBids.find { it.ownerUsername == '%s' }.", testData.user2().getUsername());
+    var find2 = format("winningBids.find { it.ownerUsername == '%s' }.", testData.user3().getUsername());
 
     given()
       .baseUri(uri)
       .header(AUTHORIZATION,testData.user1Token())
-      .pathParam("id",testData.auctionLot1().getId())
+      .pathParam("id",testData.auctionLot2().getId())
       .when()
       .put("auctions/{id}")
       .then()
       .statusCode(HttpStatus.OK.value())
-      .body(find1+"username",equalTo(bid1.getUser().getUsername()))
+      .log()
+      .all()
+      .body(find1+"ownerUsername",equalTo(bid1.getUser().getUsername()))
       .body(find1+"quantity",equalTo(bid1.getQuantity()))
-      .body(find1+"price",equalTo(bid1.getPrice()))
-      .body(find2+"username",equalTo(bid2.getUser().getUsername()))
+      .body(find1+"price",equalTo(125.00F))
+      .body(find2+"ownerUsername",equalTo(bid2.getUser().getUsername()))
       .body(find2+"quantity",equalTo(bid2.getQuantity()))
-      .body(find2+"price",equalTo(bid2.getPrice()))
+      .body(find2+"price",equalTo(127.00F))
       .body("totalSoldQuantity",equalTo(20))
-      .body("totalRevenue",equalTo(520));
+      .body("totalRevenue",equalTo(2520F));
 
   }
 

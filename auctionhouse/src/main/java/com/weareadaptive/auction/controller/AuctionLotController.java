@@ -6,11 +6,11 @@ import static com.weareadaptive.auction.controller.BidMapper.mapBid;
 import com.weareadaptive.auction.controller.dto.AuctionResponse;
 import com.weareadaptive.auction.controller.dto.BidRequest;
 import com.weareadaptive.auction.controller.dto.BidResponse;
+import com.weareadaptive.auction.controller.dto.ClosingSummaryResponse;
 import com.weareadaptive.auction.controller.dto.CreateAuctionRequest;
 import com.weareadaptive.auction.exception.EntityNotFoundException;
 import com.weareadaptive.auction.model.AuctionLot;
 import com.weareadaptive.auction.model.Bid;
-import com.weareadaptive.auction.model.ClosingSummary;
 import com.weareadaptive.auction.service.AuctionLotService;
 import java.security.Principal;
 import java.util.stream.Stream;
@@ -84,10 +84,10 @@ public class AuctionLotController {
   }
 
   @PutMapping("/{id}")
-  ClosingSummary closeAuction(@PathVariable int id, Principal principal) {
+  ClosingSummaryResponse closeAuction(@PathVariable int id, Principal principal) {
 
 
-    return auctionLotService.closeAuction(id,principal.getName());
+    return ClosingSummaryMapper.map(auctionLotService.closeAuction(id, principal.getName()), id);
   }
 
 
