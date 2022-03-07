@@ -266,6 +266,20 @@ public class AuctionControllerTest {
       .body("totalRevenue",equalTo(2520F));
 
   }
+  @DisplayName("Should throw if not owner trying to close")
+  @Test
+  public void closeAuctionShouldThrowIfNotOwner(){
+
+      given()
+        .baseUri(uri)
+        .header(AUTHORIZATION,testData.user2Token())
+        .pathParam("id",testData.auctionLot2().getId())
+        .when()
+        .put("auctions/{id}")
+        .then()
+        .statusCode(HttpStatus.UNAUTHORIZED.value());
+
+  }
 
 
 }
