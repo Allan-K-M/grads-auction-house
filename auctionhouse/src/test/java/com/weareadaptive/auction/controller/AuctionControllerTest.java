@@ -295,6 +295,36 @@ public class AuctionControllerTest {
       .statusCode(HttpStatus.BAD_REQUEST.value());
 
   }
+  @DisplayName("should return closing summary if is closed and is owner")
+  @Test
+  public void getClosingSummaryShouldReturnClosingSummary(){
+    var bid1=auctionLotService.bid(testData.auctionLot2().getId(),testData.user2().getUsername(),10,125.00);
+    var bid2=auctionLotService.bid(testData.auctionLot2().getId(),testData.user3().getUsername(),10,127.00);
+
+
+    var find1 = format("winningBids.find { it.ownerUsername == '%s' }.", testData.user2().getUsername());
+    var find2 = format("winningBids.find { it.ownerUsername == '%s' }.", testData.user3().getUsername());
+
+    testData.auctionLot2().close();
+
+    given()
+      .baseUri(uri)
+      .header(AUTHORIZATION,testData.user1Token())
+      .pathParam("id",testData.auctionLot2().getId())
+      .when()
+      .get("auctions/{id}/ClosingSummary")
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .body(find1+"ownerUsername",equalTo(bid1.getUser().getUsername()))
+      .body(find1+"quantity",equalTo(bid1.getQuantity()))
+      .body(find1+"price",equalTo(125.00F))
+      .body(find2+"ownerUsername",equalTo(bid2.getUser().getUsername()))
+      .body(find2+"quantity",equalTo(bid2.getQuantity()))
+      .body(find2+"price",equalTo(127.00F))
+      .body("totalSoldQuantity",equalTo(20))
+      .body("totalRevenue",equalTo(2520F));
+
+  }
 
 
 }

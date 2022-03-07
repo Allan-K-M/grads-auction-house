@@ -70,4 +70,12 @@ public class AuctionLotService {
     }
     throw new UnauthorizedActivityException("User can not close auction");
   }
+
+  public ClosingSummary getClosingSummary(String username, int id) {
+    AuctionLot auctionLot = auctionState.get(id);
+    if (auctionLot.getOwner().getUsername().equals(username)) {
+      return auctionLot.getClosingSummary();
+    }
+    throw new UnauthorizedActivityException("User can not view Closing Summary");
+  }
 }

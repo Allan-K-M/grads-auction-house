@@ -90,5 +90,10 @@ public class AuctionLotController {
     return ClosingSummaryMapper.map(auctionLotService.closeAuction(id, principal.getName()), id);
   }
 
+  @GetMapping("/{id}/ClosingSummary")
+  ClosingSummaryResponse getClosingSummary(Principal principal, @PathVariable int id){
+    return ClosingSummaryMapper.map(auctionLotService.getClosingSummary(principal.getName(),id),id);
+  }
+
 
 }
