@@ -10,6 +10,7 @@ import com.weareadaptive.auction.controller.dto.CreateAuctionRequest;
 import com.weareadaptive.auction.exception.EntityNotFoundException;
 import com.weareadaptive.auction.model.AuctionLot;
 import com.weareadaptive.auction.model.Bid;
+import com.weareadaptive.auction.model.ClosingSummary;
 import com.weareadaptive.auction.service.AuctionLotService;
 import java.security.Principal;
 import java.util.stream.Stream;
@@ -19,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -40,8 +42,11 @@ public class AuctionLotController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  AuctionResponse create(@RequestBody @Valid CreateAuctionRequest createAuctionRequest, Principal principal) {
-    return map(auctionLotService.create(principal.getName(), createAuctionRequest.symbol(), createAuctionRequest.quantity(), createAuctionRequest.minPrice()));
+  AuctionResponse create(@RequestBody @Valid CreateAuctionRequest createAuctionRequest,
+                         Principal principal) {
+    return map(auctionLotService.create(principal.getName(),
+      createAuctionRequest.symbol(), createAuctionRequest.quantity(),
+      createAuctionRequest.minPrice()));
 
   }
 
@@ -53,7 +58,8 @@ public class AuctionLotController {
 
   @GetMapping("/{id}")
   AuctionResponse getAuctionById(@PathVariable int id) {
-    AuctionLot auctionLot = auctionLotService.getAuctionById(id).orElseThrow(() -> new EntityNotFoundException("Invalid Auction Id"));
+    AuctionLot auctionLot = auctionLotService.getAuctionById(id).orElseThrow(
+        () -> new EntityNotFoundException("Invalid Auction Id"));
     return map(auctionLot);
   }
 
@@ -62,8 +68,8 @@ public class AuctionLotController {
   BidResponse bid(@RequestBody @Valid BidRequest bidRequest,
                   Principal principal, @PathVariable int id) {
 
-    Bid bid = auctionLotService.bid(id, principal.getName(), bidRequest.quantity()
-      , bidRequest.price());
+    Bid bid = auctionLotService.bid(id, principal.getName(),
+        bidRequest.quantity(), bidRequest.price());
 
     return mapBid(bid, id);
 
@@ -71,11 +77,17 @@ public class AuctionLotController {
 
   @ResponseStatus(HttpStatus.FOUND)
   @GetMapping("/bids/{id}")
-  Stream<BidResponse> getAllAuctionBids(Principal principal, @PathVariable int id){
-    return auctionLotService.getAllAuctionBids(principal.getName(),id)
-      .stream()
-      .map(bid -> mapBid(bid,id));
+  Stream<BidResponse> getAllAuctionBids(Principal principal, @PathVariable int id) {
+    return auctionLotService.getAllAuctionBids(
+      principal.getName(), id).stream().map(bid -> mapBid(bid, id));
 
+  }
+
+  @PutMapping("/{id}")
+  ClosingSummary closeAuction(@PathVariable int id, Principal principal) {
+
+
+    return auctionLotService.closeAuction(id,principal.getName());
   }
 
 

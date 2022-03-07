@@ -1,6 +1,5 @@
 package com.weareadaptive.auction.controller;
 
-import com.github.javafaker.Faker;
 import com.weareadaptive.auction.TestData;
 import com.weareadaptive.auction.controller.dto.BidRequest;
 import com.weareadaptive.auction.controller.dto.CreateAuctionRequest;
@@ -25,7 +24,6 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AuctionControllerTest {
   public static final int INVALID_AUCTION_ID = 999999;
-  private final Faker faker = new Faker();
   @Autowired
   private TestData testData;
   @Autowired
@@ -64,7 +62,7 @@ public class AuctionControllerTest {
   }
 
 
-  @DisplayName("create should throw an Authorization Eexception if User is Blocked ")
+  @DisplayName("create should throw an Authorization Exception if User is Blocked ")
   @Test
   public void createShouldThrowIfUserCreatingAuctionIsBlocked() {
     testData.user1().block();
@@ -205,6 +203,7 @@ public class AuctionControllerTest {
 
     var find1 = format("find { it.auctionId == %s }.", testData.auctionLot1().getId());
 
+    //assert the whole object
     given()
       .baseUri(uri)
       .header(AUTHORIZATION, testData.user1Token())
@@ -226,7 +225,6 @@ public class AuctionControllerTest {
   public void getAllAuctionBidsShouldThrowIfUserIsNotOwner(){
     auctionLotService.bid(testData.auctionLot1().getId(), testData.user2().getUsername(), 4, 134.56);
 
-    var find1 = format("find { it.auctionId == %s }.", testData.auctionLot1().getId());
 
     given()
       .baseUri(uri)
@@ -236,6 +234,36 @@ public class AuctionControllerTest {
       .get("auctions/bids/{id}")
       .then()
       .statusCode(HttpStatus.UNAUTHORIZED.value());
+  }
+
+  @DisplayName("Should return closing summary if user is owner")
+  @Test
+  public void closeAuctionShouldReturnSummary(){
+    var auction1=auctionLotService.create(testData.user3().getUsername(),"MANGO",50,23.00);
+    var bid1=auctionLotService.bid(auction1.getId(),testData.user1().getUsername(),10,25.00);
+    var bid2=auctionLotService.bid(auction1.getId(),testData.user2().getUsername(),10,27.00);
+
+    var find1 = format("winningBids.find { it.username == '%s' }.", testData.user1().getUsername());
+
+    var find2 = format("list.find { it.username == '%s' }.", testData.user2().getUsername());
+
+    given()
+      .baseUri(uri)
+      .header(AUTHORIZATION,testData.user1Token())
+      .pathParam("id",testData.auctionLot1().getId())
+      .when()
+      .put("auctions/{id}")
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .body(find1+"username",equalTo(bid1.getUser().getUsername()))
+      .body(find1+"quantity",equalTo(bid1.getQuantity()))
+      .body(find1+"price",equalTo(bid1.getPrice()))
+      .body(find2+"username",equalTo(bid2.getUser().getUsername()))
+      .body(find2+"quantity",equalTo(bid2.getQuantity()))
+      .body(find2+"price",equalTo(bid2.getPrice()))
+      .body("totalSoldQuantity",equalTo(20))
+      .body("totalRevenue",equalTo(520));
+
   }
 
 

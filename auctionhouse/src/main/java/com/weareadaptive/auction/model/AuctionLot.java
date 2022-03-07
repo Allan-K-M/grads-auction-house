@@ -95,7 +95,7 @@ public class AuctionLot implements Entity {
     bids.add(new Bid(bidder, quantity, price));
   }
 
-  public void close() {
+  public ClosingSummary close() {
     if (status == Status.CLOSED) {
       throw new BusinessException("Cannot close because already closed.");
     }
@@ -127,6 +127,7 @@ public class AuctionLot implements Entity {
     closingSummary =
       new ClosingSummary(unmodifiableList(winningBids), this.quantity - availableQuantity,
         revenue, timeProvider.get());
+    return closingSummary;
   }
 
   public int getId() {
