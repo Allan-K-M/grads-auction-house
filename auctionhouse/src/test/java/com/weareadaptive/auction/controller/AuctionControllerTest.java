@@ -270,14 +270,29 @@ public class AuctionControllerTest {
   @Test
   public void closeAuctionShouldThrowIfNotOwner(){
 
-      given()
-        .baseUri(uri)
-        .header(AUTHORIZATION,testData.user2Token())
-        .pathParam("id",testData.auctionLot2().getId())
-        .when()
-        .put("auctions/{id}")
-        .then()
-        .statusCode(HttpStatus.UNAUTHORIZED.value());
+    given()
+      .baseUri(uri)
+      .header(AUTHORIZATION,testData.user2Token())
+      .pathParam("id",testData.auctionLot2().getId())
+      .when()
+      .put("auctions/{id}")
+      .then()
+      .statusCode(HttpStatus.UNAUTHORIZED.value());
+
+  }
+  @DisplayName("Should throw if Auction is already closed")
+  @Test
+  public void closeAuctionShouldThrowIfAuctionIsClosed(){
+    testData.auctionLot1().close();
+
+    given()
+      .baseUri(uri)
+      .header(AUTHORIZATION,testData.user1Token())
+      .pathParam("id",testData.auctionLot1().getId())
+      .when()
+      .put("auctions/{id}")
+      .then()
+      .statusCode(HttpStatus.BAD_REQUEST.value());
 
   }
 
