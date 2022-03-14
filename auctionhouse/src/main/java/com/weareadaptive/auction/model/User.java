@@ -3,36 +3,32 @@ package com.weareadaptive.auction.model;
 
 import static org.apache.logging.log4j.util.Strings.isBlank;
 
-public class User implements Entity {
-  private final int id;
-  private final String username;
-  private final String password;
-  private final boolean isAdmin;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+
+@Entity(name = "AuctionUser")
+public class User {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private int id;
+  private String username;
+  private String password;
+  private boolean isAdmin;
   private String firstName;
   private String lastName;
   private String organisation;
-  private String phone;
-  private String email;
   private boolean blocked;
 
-  public User(
-      int id,
-      String username,
-      String password,
-      String firstName,
-      String lastName,
-      String organisation) {
-    this(id, username, password, firstName, lastName, organisation, false);
+  public User(String username, String password, String firstName, String lastName,
+              String organisation) {
+    this(username, password, firstName, lastName, organisation, false);
   }
 
-  public User(
-      int id,
-      String username,
-      String password,
-      String firstName,
-      String lastName,
-      String organisation,
-      boolean isAdmin) {
+  public User(String username, String password, String firstName, String lastName,
+              String organisation, boolean isAdmin) {
     if (isBlank(username)) {
       throw new BusinessException("username cannot be null or empty");
     }
@@ -58,19 +54,21 @@ public class User implements Entity {
     this.isAdmin = isAdmin;
   }
 
+  public User() {
+
+  }
+
   @Override
   public String toString() {
-    return "User{"
-        + "username='" + username + '\''
-        + '}';
+    return "User{" + "username='" + username + '\'' + '}';
   }
 
   public String getUsername() {
     return username;
   }
 
-  public boolean validatePassword(String password) {
-    return this.password.equals(password);
+  public void setUsername(String username) {
+    this.username = username;
   }
 
   public String getFirstName() {
@@ -94,6 +92,10 @@ public class User implements Entity {
     return id;
   }
 
+  public void setId(int id) {
+    this.id = id;
+  }
+
   public String getOrganisation() {
     return organisation;
   }
@@ -102,27 +104,28 @@ public class User implements Entity {
     this.organisation = organisation;
   }
 
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
+  }
+
   public boolean isAdmin() {
     return isAdmin;
   }
 
-  public String getPhone() {
-    return phone;
-  }
-
-  public String getEmail() {
-    return email;
+  public void setAdmin(boolean admin) {
+    isAdmin = admin;
   }
 
   public boolean isBlocked() {
     return blocked;
   }
 
-  public void block() {
-    blocked = true;
+  public void setBlocked(boolean blocked) {
+    this.blocked = blocked;
   }
 
-  public void unblock() {
-    blocked = false;
-  }
 }

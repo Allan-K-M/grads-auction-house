@@ -23,9 +23,6 @@ public class TestData {
   private User user2;
   private User user3;
   private User user4;
-  private AuctionLot auctionLot1;
-  private AuctionLot auctionLot2;
-  private AuctionLot auctionLot3;
 
 
   public TestData(UserService userService, AuctionLotService auctionLotService) {
@@ -41,23 +38,12 @@ public class TestData {
     user2 = createRandomUser();
     user3 = createRandomUser();
     user4 = createRandomUser();
-    auctionLot1=createRandomAuction();
-    auctionLot2=createRandomAuction();
-    auctionLot3=createRandomAuction();
   }
 
   public User user1() {
     return user1;
   }
-  public AuctionLot auctionLot1() {
-    return auctionLot1;
-  }
-  public AuctionLot auctionLot2() {
-    return auctionLot2;
-  }
-  public AuctionLot auctionLot3() {
-    return auctionLot3;
-  }
+
   public User user2() {
     return user2;
   }
@@ -97,29 +83,15 @@ public class TestData {
     );
     return user;
   }
-  public AuctionLot createRandomAuction(){
-  ;
-    var auctionLot= auctionLotService.create(
-      user1.getUsername(),
-      "ORANGE",
-      34,
-      45.78);
-    return auctionLot;
-  }
+
 
   public String getToken(User user) {
     return "Bearer " + user.getUsername() + ":" + PASSWORD;
   }
 
-  public enum Stock {
-    APPLE("AAPL"),
-    MICROSOFT("MSFT"),
-    META("FB");
-
-    private final String symbol;
-
-    Stock(String symbol) {
-      this.symbol = symbol;
-    }
+  public String auctionUserToken(String username){
+    return "Bearer " + username + ":" + PASSWORD;
   }
+
+
 }

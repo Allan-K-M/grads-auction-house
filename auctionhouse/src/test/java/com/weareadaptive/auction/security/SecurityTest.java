@@ -56,7 +56,7 @@ public class SecurityTest {
   @Test
   public void blockUserShouldNotWork() {
     var user = testData.createRandomUser();
-    user.block();
+    user.setBlocked(true);
 
     //@formatter:off
     given()

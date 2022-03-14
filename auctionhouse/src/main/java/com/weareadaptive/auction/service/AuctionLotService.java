@@ -1,79 +1,105 @@
 package com.weareadaptive.auction.service;
 
 
+import static java.lang.String.format;
+
 import com.weareadaptive.auction.exception.UnauthorizedActivityException;
 import com.weareadaptive.auction.model.AuctionLot;
-import com.weareadaptive.auction.model.AuctionState;
 import com.weareadaptive.auction.model.Bid;
 import com.weareadaptive.auction.model.BusinessException;
 import com.weareadaptive.auction.model.ClosingSummary;
-import com.weareadaptive.auction.model.UserState;
+import com.weareadaptive.auction.repository.AuctionRepository;
+import com.weareadaptive.auction.repository.BidRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 
-//formatter:off
+
 @Service
 public class AuctionLotService {
-  private final AuctionState auctionState;
-  private final UserState userState;
+  private final AuctionRepository auctionRepository;
+  private final BidRepository bidRepository;
+  private final UserService userService;
 
-  public AuctionLotService(AuctionState auctionState, UserState userState) {
-    this.auctionState = auctionState;
-    this.userState = userState;
+  public AuctionLotService(AuctionRepository auctionRepository,
+                           BidRepository bidRepository,
+                           UserService userService) {
+    this.auctionRepository = auctionRepository;
+    this.bidRepository = bidRepository;
+    this.userService = userService;
   }
-  //formatter:on
+
 
   public AuctionLot create(String owner, String symbol, int quantity, double minPrice) {
-    var user = userState.getByUsername(owner).orElseThrow(
-        () -> new BusinessException("Invalid User Id"));
-    var id = auctionState.nextId();
-    var auctionLot = new AuctionLot(id, user, symbol, quantity, minPrice);
-    auctionState.add(auctionLot);
+    var user = userService.getByUsername(owner).orElseThrow(
+        () -> new BusinessException("Invalid Username"));
+    var auctionLot = new AuctionLot( owner, symbol, quantity, minPrice);
+    auctionRepository.save(auctionLot);
     return auctionLot;
   }
 
-  public Stream<AuctionLot> getAllAuctions(String username) {
-    return auctionState.stream()
-      .filter((auctionLot) -> auctionLot.getOwner().getUsername().equals(username));
+  public List<AuctionLot> getAllAuctions(String username) {
+    return auctionRepository.getAllUserAuctions(username);
   }
 
   public Optional<AuctionLot> getAuctionById(int id) {
-    return Optional.ofNullable(auctionState.get(id));
+    return auctionRepository.findById(id);
   }
 
-  public Bid bid(int auctionId, String userName, int quantity, double price) {
-    var auction = getAuctionById(auctionId)
-        .orElseThrow(() -> new BusinessException("Invalid Auction Id"));
-    var bidder = userState.getByUsername(userName)
-        .orElseThrow(() -> new BusinessException("Invalid User Id"));
-    if (auction.getStatus().equals(AuctionLot.Status.CLOSED)) {
-      throw new BusinessException("Auction Already closed can not bid");
+
+
+  public Bid bid(int id, String userName, int quantity, double price) {
+
+    var auction = getAuctionById(id)
+      .orElseThrow(() -> new BusinessException("Invalid Auction Id"));
+
+    if (auction.getStatus() == AuctionLot.Status.CLOSED) {
+      throw new BusinessException("Cannot close an already closed.");
     }
-    auction.bid(bidder, quantity, price);
-    return new Bid(bidder, quantity, price);
+
+    if (userName.equals(auction.getOwner())) {
+      throw new BusinessException("User cannot bid on his own auctions");
+    }
+
+    if (quantity < 0) {
+      throw new BusinessException("quantity must be be above 0");
+    }
+
+    if (price < auction.getMinPrice()) {
+      throw new BusinessException(format("price needs to be above %s", auction.getMinPrice()));
+    }
+
+    var bidder = userService.getByUsername(userName)
+        .orElseThrow(() -> new BusinessException("Invalid User name"));
+
+    Bid newBid=new Bid(id, bidder.getUsername(), quantity, price);
+    bidRepository.save(newBid);
+    return newBid;
   }
 
   public List<Bid> getAllAuctionBids(String username, int id) {
-    AuctionLot auctionLot = auctionState.get(id);
-    if (auctionLot.getOwner().getUsername().equals(username)) {
-      return auctionLot.getBids();
+    AuctionLot auctionLot = auctionRepository.getById(id);
+    if (auctionLot.getOwner().equals(username)) {
+      return bidRepository.getAllAuctionBids(id);
     }
     throw new UnauthorizedActivityException("User can not view Bids");
   }
 
   public ClosingSummary closeAuction(int id, String username) {
-    AuctionLot auctionLot = auctionState.get(id);
-    if (auctionLot.getOwner().getUsername().equals(username)) {
+    AuctionLot auctionLot = auctionRepository.getById(id);
+    if (auctionLot.getOwner().equals(username)) {
+      auctionLot.close();
+      auctionRepository.save(auctionLot);
       return auctionLot.close();
     }
     throw new UnauthorizedActivityException("User can not close auction");
   }
 
   public ClosingSummary getClosingSummary(String username, int id) {
-    AuctionLot auctionLot = auctionState.get(id);
-    if (auctionLot.getOwner().getUsername().equals(username)) {
+    AuctionLot auctionLot = auctionRepository.getById(id);
+    if (auctionLot.getOwner().equals(username)) {
       return auctionLot.getClosingSummary();
     }
     throw new UnauthorizedActivityException("User can not view Closing Summary");

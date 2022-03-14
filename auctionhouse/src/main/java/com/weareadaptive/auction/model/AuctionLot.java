@@ -9,24 +9,34 @@ import static java.util.Comparator.comparing;
 import static java.util.Comparator.comparingInt;
 import static org.apache.logging.log4j.util.Strings.isBlank;
 
+import com.weareadaptive.auction.repository.BidRepository;
+import com.weareadaptive.auction.service.AuctionLotService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
-public class AuctionLot implements Entity {
-  private final int id;
-  private final User owner;
-  private final String symbol;
-  private final double minPrice;
-  private final int quantity;
-  private final List<Bid> bids;
+@Entity(name = "Auction")
+public class AuctionLot {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private int id;
+
+  private String owner;
+  private String symbol;
+  private double minPrice;
+  private int quantity;
   private Status status;
-  private ClosingSummary closingSummary;
-  private Supplier<Instant> timeProvider;
+  private static final AuctionLotService auctionLotService = null;
+  private static ClosingSummary closingSummary;
+  private static Supplier<Instant> timeProvider;
 
-  public AuctionLot(int id, User owner, String symbol, int quantity, double minPrice) {
+  public AuctionLot( String owner, String symbol, int quantity, double minPrice) {
     if (owner == null) {
       throw new BusinessException("owner cannot be null");
     }
@@ -39,24 +49,24 @@ public class AuctionLot implements Entity {
     if (quantity < 0) {
       throw new BusinessException("quantity must be above 0");
     }
-    if (owner.isBlocked()) {
-      throw new BusinessException("Owner can not create an auction");
-    }
-    this.id = id;
+
     this.owner = owner;
     this.symbol = symbol.toUpperCase().trim();
     this.quantity = quantity;
     this.minPrice = minPrice;
-    bids = new ArrayList<>();
     status = Status.OPENED;
     timeProvider = Instant::now;
+  }
+
+  public AuctionLot() {
+
   }
 
   public Status getStatus() {
     return status;
   }
 
-  public User getOwner() {
+  public String getOwner() {
     return owner;
   }
 
@@ -71,29 +81,8 @@ public class AuctionLot implements Entity {
     return closingSummary;
   }
 
-  public List<Bid> getBids() {
-    return unmodifiableList(bids);
-  }
 
-  public void bid(User bidder, int quantity, double price) {
-    if (status == Status.CLOSED) {
-      throw new BusinessException("Cannot close an already closed.");
-    }
 
-    if (bidder == owner) {
-      throw new BusinessException("User cannot bid on his own auctions");
-    }
-
-    if (quantity < 0) {
-      throw new BusinessException("quantity must be be above 0");
-    }
-
-    if (price < minPrice) {
-      throw new BusinessException(format("price needs to be above %s", minPrice));
-    }
-
-    bids.add(new Bid(bidder, quantity, price));
-  }
 
   public ClosingSummary close() {
     if (status == Status.CLOSED) {
@@ -102,7 +91,7 @@ public class AuctionLot implements Entity {
 
     status = Status.CLOSED;
 
-    var orderedBids = bids
+    var orderedBids = auctionLotService.getAllAuctionBids(owner, id)
         .stream()
         .sorted(reverseOrder(comparing(Bid::getPrice))
             .thenComparing(reverseOrder(comparingInt(Bid::getQuantity))))
@@ -146,18 +135,17 @@ public class AuctionLot implements Entity {
     this.timeProvider = timeProvider;
   }
 
-  public List<Bid> getLostBids(User user) {
-    return bids
+  public List<Bid> getLostBids() {
+    return auctionLotService.getAllAuctionBids(owner, id)
         .stream()
-        .filter(bid -> bid.getUser() == user
-            && closingSummary.winningBids().stream().noneMatch(wb -> wb.originalBid() == bid))
+        .filter(bid -> closingSummary.winningBids().stream().noneMatch(wb -> wb.originalBid() == bid))
         .toList();
   }
 
-  public List<WinningBid> getWonBids(User user) {
+  public List<WinningBid> getWonBids(String owner) {
     return closingSummary.winningBids()
         .stream()
-        .filter(b -> b.originalBid().getUser() == user)
+        .filter(b -> b.originalBid().getUser().equals(owner))
         .toList();
   }
 

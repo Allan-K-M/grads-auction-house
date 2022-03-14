@@ -1,14 +1,33 @@
 package com.weareadaptive.auction.model;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity(name = "Bids")
 public class Bid {
-  private final User user;
-  private final int quantity;
-  private final double price;
+
+  @Id
+  private int id;
+
+  private String  owner;
+  private int quantity;
+  private double price;
   private State state;
   private int winQuantity;
 
-  public Bid(User user, int quantity, double price) {
-    if (user == null) {
+  public int getId() {
+    return id;
+  }
+
+  public void setId(int auctionId) {
+    this.id = auctionId;
+  }
+
+  public Bid(int auctionId,String owner, int quantity, double price) {
+    if (owner == null) {
       throw new BusinessException("user cannot be null");
     }
 
@@ -20,18 +39,23 @@ public class Bid {
       throw new BusinessException("quantity must be above 0");
     }
 
+    this.id=auctionId;
     this.price = price;
-    this.user = user;
+    this.owner = owner;
     this.quantity = quantity;
     state = State.PENDING;
+  }
+
+  public Bid() {
+
   }
 
   public int getQuantity() {
     return quantity;
   }
 
-  public User getUser() {
-    return user;
+  public String getUser() {
+    return owner;
   }
 
   public double getPrice() {
@@ -70,7 +94,7 @@ public class Bid {
   @Override
   public String toString() {
     return "Bid{"
-      + "user=" + user
+      + "owner=" + owner
       + ", price=" + price
       + ", quantity=" + quantity
       + '}';

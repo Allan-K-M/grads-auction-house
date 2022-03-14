@@ -6,8 +6,10 @@ import com.weareadaptive.auction.controller.dto.CreateUserRequest;
 import com.weareadaptive.auction.controller.dto.UpdateUserRequest;
 import com.weareadaptive.auction.controller.dto.UserResponse;
 import com.weareadaptive.auction.exception.EntityNotFoundException;
+import com.weareadaptive.auction.exception.UnauthorizedActivityException;
 import com.weareadaptive.auction.model.User;
 import com.weareadaptive.auction.service.UserService;
+import java.security.Principal;
 import java.util.stream.Stream;
 import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -44,7 +46,11 @@ public class UserController {
   }
 
   @GetMapping("/{id}")
-  UserResponse get(@PathVariable int id) {
+  UserResponse get(@PathVariable int id, Principal principal) {
+    User currentUser=userService.getByUsername(principal.getName()).get();
+    if(!currentUser.isAdmin()){
+      throw new UnauthorizedActivityException("User not Admin");
+    }
     User user = userService.get(id).orElseThrow(() -> new EntityNotFoundException("Invalid ID"));
     return map(user);
   }
@@ -64,15 +70,13 @@ public class UserController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PutMapping("/{id}/block")
   void block(@PathVariable int id) {
-    User user = userService.get(id).orElseThrow(() -> new EntityNotFoundException("Invalid Id"));
-    user.block();
+    userService.block(id);
   }
 
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PutMapping("/{id}/unblock")
   void unblock(@PathVariable int id) {
-    User user = userService.get(id).orElseThrow(() -> new EntityNotFoundException("Invalid Id"));
-    user.unblock();
+    userService.unblock(id);
   }
 
 }

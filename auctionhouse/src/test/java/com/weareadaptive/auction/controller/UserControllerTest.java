@@ -14,9 +14,11 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 
 import com.github.javafaker.Faker;
+import com.weareadaptive.auction.IntegrationTest;
 import com.weareadaptive.auction.TestData;
 import com.weareadaptive.auction.controller.dto.CreateUserRequest;
 import com.weareadaptive.auction.controller.dto.UpdateUserRequest;
+import com.weareadaptive.auction.repository.UserRepository;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,22 +28,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class UserControllerTest {
+public class UserControllerTest extends IntegrationTest {
   public static final int INVALID_USER_ID = 99999;
-
-
-  @Autowired
-  private TestData testData;
-  @LocalServerPort
-  private int port;
-  private String uri;
   private final Faker faker = new Faker();
 
-  @BeforeEach
-  public void initialiseRestAssuredMockMvcStandalone() {
-    uri = "http://localhost:" + port;
-  }
+  @Autowired
+  private UserRepository userRepository;
 
   @DisplayName("create should return a bad request when the username is duplicated")
   @Test
@@ -86,13 +78,11 @@ public class UserControllerTest {
             .body(find1 + "firstName", equalTo(testData.user1().getFirstName()))
             .body(find1 + "lastName", equalTo(testData.user1().getLastName()))
             .body(find1 + "organisation", equalTo(testData.user1().getOrganisation()))
-            .body(find1 + "email", equalTo(testData.user1().getEmail()))
             // Validate User2
             .body(find2 + "username", equalTo(testData.user2().getUsername()))
             .body(find2 + "firstName", equalTo(testData.user2().getFirstName()))
             .body(find2 + "lastName", equalTo(testData.user2().getLastName()))
-            .body(find2 + "organisation", equalTo(testData.user2().getOrganisation()))
-            .body(find2 + "email", equalTo(testData.user2().getEmail()));
+            .body(find2 + "organisation", equalTo(testData.user2().getOrganisation()));
         //@formatter:on
   }
 
@@ -118,7 +108,7 @@ public class UserControllerTest {
         given()
             .baseUri(uri)
             .header(AUTHORIZATION, testData.user1Token())
-            .pathParam("id", INVALID_USER_ID)
+            .pathParam("id", testData.user2().getId())
         .when()
             .get("/users/{id}")
         .then()
@@ -190,6 +180,8 @@ public class UserControllerTest {
         .when()
             .put("/users/{id}")
         .then()
+            .log()
+            .all()
             .statusCode(HttpStatus.OK.value())
             .body("id", equalTo(newUser.getId()))
             .body("username",equalTo(newUser.getUsername()))
@@ -212,17 +204,20 @@ public class UserControllerTest {
         .when()
             .put("/users/{id}/block")
         .then()
+            .log()
+            .all()
             .statusCode(NO_CONTENT.value());
-        //@formatter:on
 
-    assertThat(user.isBlocked(), equalTo(true));
+        //@formatter:on
+    var newUser = userRepository.findById(user.getId()).get();
+    assertThat(newUser.isBlocked(), equalTo(true));
   }
 
   @DisplayName("unblock should unblock the user")
   @Test
-  public void shouldUnlockUser() {
+  public void shouldUnblockUser() {
     var user = testData.createRandomUser();
-    user.block();
+    user.setBlocked(true);
 
     //@formatter:off
         given()
@@ -234,8 +229,8 @@ public class UserControllerTest {
         .then()
             .statusCode(NO_CONTENT.value());
         //@formatter:on
-
-    assertThat(user.isBlocked(), equalTo(false));
+    var newUser = userRepository.findById(user.getId()).get();
+    assertThat(newUser.isBlocked(), equalTo(false));
   }
 
   @DisplayName("unblock should return 404 when user is not found")

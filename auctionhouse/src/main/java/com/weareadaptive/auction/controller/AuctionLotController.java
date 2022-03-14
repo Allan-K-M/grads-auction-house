@@ -48,7 +48,7 @@ public class AuctionLotController {
 
   @GetMapping("/owner")
   public Stream<AuctionResponse> getAllUserAuctions(Principal principal) {
-    return auctionLotService.getAllAuctions(principal.getName()).map(AuctionMapper::map);
+    return auctionLotService.getAllAuctions(principal.getName()).stream().map(AuctionMapper::map);
   }
 
 
