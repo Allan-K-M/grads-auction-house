@@ -142,18 +142,18 @@ public class AuctionControllerTest extends IntegrationTest {
   @Test
   public void getAuctionByIdShouldReturnAuction() {
     AuctionLot auctionLot =
-        auctionLotService.create(testData.user1().getUsername(), "ORANGE", 45, 33.65);
+        auctionLotService.create(testData.user4().getUsername(), "ORANGE", 45, 33.65);
 
     //@formatter:off
     given()
         .baseUri(uri)
-        .header(AUTHORIZATION, testData.user1Token())
+        .header(AUTHORIZATION, testData.user4Token())
         .pathParam("id", auctionLot.getId())
     .when()
         .get("auctions/{id}")
     .then()
         .statusCode(HttpStatus.OK.value())
-        .body("owner", equalTo(testData.user1().getUsername()))
+        .body("owner", equalTo(testData.user4().getUsername()))
         .body("symbol", equalTo("ORANGE"))
         .body("quantity", equalTo(45))
         .body("minPrice", equalTo(33.65F));
@@ -168,7 +168,7 @@ public class AuctionControllerTest extends IntegrationTest {
     //@formatter:off
     given()
         .baseUri(uri)
-        .header(AUTHORIZATION, testData.user1Token())
+        .header(AUTHORIZATION, testData.user3Token())
         .pathParam("id", 99999)
     .when()
         .get("auctions/{id}")
@@ -231,14 +231,14 @@ public class AuctionControllerTest extends IntegrationTest {
   @Test
   public void bidShouldThrowIfUserCanNotBid() {
     BidRequest bidRequest = new BidRequest(3, 45.99);
-    AuctionLot auctionLot1=auctionLotService.create(testData.user1().getUsername(),"FB",100,20.00);
+    AuctionLot auctionLot44=auctionLotService.create(testData.user4().getUsername(),"FB",100,20.00);
     //@formatter:off
     given().
         baseUri(uri)
-        .header(AUTHORIZATION, testData.user1Token())
+        .header(AUTHORIZATION, testData.user4Token())
         .contentType(ContentType.JSON)
         .body(bidRequest)
-        .pathParam("id", auctionLot1.getId())
+        .pathParam("id", auctionLot44.getId())
     .when()
         .post("auctions/bids/{id}")
     .then()
@@ -249,15 +249,15 @@ public class AuctionControllerTest extends IntegrationTest {
   @DisplayName("getAllAuctionBids should return all bids for the auction owned by the User")
   @Test
   public void getAllAuctionBidsShouldReturnAllBidsForUserAuction() {
-    AuctionLot auctionLot1 =
+    AuctionLot auctionLot33 =
         auctionLotService.create(testData.user1().getUsername(), "FB", 100, 20.00);
 
     Bid bid1 =
-        auctionLotService.bid(auctionLot1.getId(), testData.user3().getUsername(), 5, 134.56);
+        auctionLotService.bid(auctionLot33.getId(), testData.user3().getUsername(), 5, 134.56);
     Bid bid2 =
-        auctionLotService.bid(auctionLot1.getId(), testData.user2().getUsername(), 4, 134.56);
+        auctionLotService.bid(auctionLot33.getId(), testData.user2().getUsername(), 4, 134.56);
     Bid bid3 =
-        auctionLotService.bid(auctionLot1.getId(), testData.user2().getUsername(), 4, 234.56);
+        auctionLotService.bid(auctionLot33.getId(), testData.user2().getUsername(), 4, 234.56);
 
 
     var find1 = format("find { it.bidId == %s }.", bid1.getBidId());
@@ -266,7 +266,7 @@ public class AuctionControllerTest extends IntegrationTest {
     given()
         .baseUri(uri)
         .header(AUTHORIZATION, testData.user1Token())
-        .pathParam("id", auctionLot1.getId())
+        .pathParam("id", auctionLot33.getId())
     .when()
         .get("auctions/bids/{id}")
     .then()
@@ -274,7 +274,7 @@ public class AuctionControllerTest extends IntegrationTest {
         .all()
         .statusCode(HttpStatus.FOUND.value())
         .body(find1 + "auctionId", equalTo(bid1.getId()))
-        .body(find1 + "quantity", equalTo(4))
+        .body(find1 + "quantity", equalTo(5))
         .body(find1 + "price", equalTo(134.56F));
     //@formatter:on
   }
@@ -373,7 +373,7 @@ public class AuctionControllerTest extends IntegrationTest {
   @DisplayName("closeAuction should throw if Auction is already closed")
   @Test
   public void closeAuctionShouldThrowIfAuctionIsClosed() {
-    AuctionLot auctionLot1=auctionLotService.create(testData.user1().getUsername(),"FB",100,20.00);
+    AuctionLot auctionLot1=auctionLotService.create(testData.user4().getUsername(),"FB",100,20.00);
 
     auctionLotService.closeAuction(auctionLot1.getId(),auctionLot1.getOwner());
     String ownerToken= testData.auctionUserToken(auctionLot1.getOwner());
@@ -394,7 +394,7 @@ public class AuctionControllerTest extends IntegrationTest {
   @Test
   public void getClosingSummaryShouldReturnClosingSummary() {
     AuctionLot auctionLot2 =
-        auctionLotService.create(testData.user1().getUsername(), "FB", 100, 20.00);
+        auctionLotService.create(testData.user4().getUsername(), "FB", 100, 20.00);
 
     var bid1 =
         auctionLotService.bid(auctionLot2.getId(), testData.user2().getUsername(), 10, 125.00);
@@ -410,8 +410,12 @@ public class AuctionControllerTest extends IntegrationTest {
     auctionLotService.closeAuction(auctionLot2.getId(), auctionLot2.getOwner());
 
     //@formatter:off
-    given().baseUri(uri).header(AUTHORIZATION, testData.user1Token())
-        .pathParam("id", auctionLot2.getId()).when().get("auctions/{id}/ClosingSummary")
+    given()
+        .baseUri(uri)
+        .header(AUTHORIZATION, testData.user4Token())
+        .pathParam("id", auctionLot2.getId())
+        .when()
+        .get("auctions/{id}/ClosingSummary")
         .then().statusCode(HttpStatus.OK.value())
         .body(find1 + "ownerUsername", equalTo(bid1.getUser()))
         .body(find1 + "quantity", equalTo(bid1.getQuantity()))
@@ -446,7 +450,7 @@ public class AuctionControllerTest extends IntegrationTest {
   @Test
   public void getClosingSummaryShouldThrowIfNotClosed() {
     AuctionLot auctionLot1 =
-        auctionLotService.create(testData.user1().getUsername(), "FB", 100, 20.00);
+        auctionLotService.create(testData.user4().getUsername(), "FB", 100, 20.00);
 
     String ownerToken = testData.auctionUserToken(auctionLot1.getOwner());
 
