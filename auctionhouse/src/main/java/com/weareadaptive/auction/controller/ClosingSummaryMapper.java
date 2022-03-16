@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 public class ClosingSummaryMapper {
   public static ClosingSummaryResponse map(ClosingSummary closingSummary, int auctionId) {
     Stream<BidResponse> bidResponses = closingSummary.winningBids().stream()
-        .map(winningBid -> BidMapper.mapBid(winningBid.originalBid(), auctionId));
+        .map(winningBid -> BidMapper.mapBid(winningBid.originalBid()));
     return new ClosingSummaryResponse(bidResponses, closingSummary.totalSoldQuantity(),
       closingSummary.totalRevenue(), closingSummary.closingTime());
   }

@@ -20,18 +20,7 @@ public abstract class IntegrationTest {
   @Autowired
   protected TestData testData;
 
-  @Container
-  public static PostgreSQLContainer<?> postgreSQL =
-    new PostgreSQLContainer<>("postgres:13.2")
-      .withUsername("testUsername")
-      .withPassword("testPassword");
 
-  @DynamicPropertySource
-  public static void postgreSQLProperties(@NotNull DynamicPropertyRegistry registry) {
-    registry.add("spring.datasource.url", postgreSQL::getJdbcUrl);
-    registry.add("spring.datasource.username", postgreSQL::getUsername);
-    registry.add("spring.datasource.password", postgreSQL::getPassword);
-  }
 
   @BeforeEach
   public void initialiseRestAssuredMockMvcStandalone() {

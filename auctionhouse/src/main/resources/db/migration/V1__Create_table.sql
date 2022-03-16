@@ -27,6 +27,7 @@ CREATE TABLE auction
 
 CREATE TABLE bids
 (
+    bid_id serial,
     id serial REFERENCES auction ,
     owner      VARCHAR(50)      NOT NULL REFERENCES auction_user (username),
     price      DOUBLE PRECISION NOT NULL,

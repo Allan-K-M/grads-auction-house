@@ -67,7 +67,7 @@ public class AuctionLotController {
     Bid bid =
         auctionLotService.bid(id, principal.getName(), bidRequest.quantity(), bidRequest.price());
 
-    return mapBid(bid, id);
+    return mapBid(bid);
 
   }
 
@@ -75,7 +75,7 @@ public class AuctionLotController {
   @GetMapping("/bids/{id}")
   public Stream<BidResponse> getAllAuctionBids(Principal principal, @PathVariable int id) {
     return auctionLotService.getAllAuctionBids(principal.getName(), id).stream()
-        .map(bid -> mapBid(bid, id));
+        .map(BidMapper::mapBid);
 
   }
 

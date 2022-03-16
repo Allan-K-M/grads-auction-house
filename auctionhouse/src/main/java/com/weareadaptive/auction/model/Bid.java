@@ -9,7 +9,12 @@ import javax.persistence.Id;
 @Entity(name = "Bids")
 public class Bid {
 
+
+
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private int bidId;
+
   private int id;
 
   private String  owner;
@@ -70,6 +75,14 @@ public class Bid {
     return state;
   }
 
+  public int getBidId() {
+    return bidId;
+  }
+
+  public void setBidId(int bidId) {
+    this.bidId = bidId;
+  }
+
   public void lost() {
     if (state != State.PENDING) {
       throw new BusinessException("Must be a pending bid");
@@ -80,7 +93,7 @@ public class Bid {
 
   public void win(int winQuantity) {
     if (state != State.PENDING) {
-      throw new BusinessException("Must be a pending bid");
+      throw new BusinessException("Must be a pending bid"+state.toString());
     }
 
     if (quantity < winQuantity) {

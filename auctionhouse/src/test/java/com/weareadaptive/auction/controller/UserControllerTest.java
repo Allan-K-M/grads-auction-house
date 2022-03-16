@@ -20,6 +20,7 @@ import com.weareadaptive.auction.controller.dto.CreateUserRequest;
 import com.weareadaptive.auction.controller.dto.UpdateUserRequest;
 import com.weareadaptive.auction.repository.UserRepository;
 import io.restassured.http.ContentType;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
 
 public class UserControllerTest extends IntegrationTest {
   public static final int INVALID_USER_ID = 99999;
@@ -34,6 +39,18 @@ public class UserControllerTest extends IntegrationTest {
 
   @Autowired
   private UserRepository userRepository;
+  @Container
+  public static PostgreSQLContainer<?> postgreSQL =
+      new PostgreSQLContainer<>("postgres:13.2")
+          .withUsername("testUsername")
+          .withPassword("testPassword");
+  @DynamicPropertySource
+  public static void postgreSQLProperties(@NotNull DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgreSQL::getJdbcUrl);
+    registry.add("spring.datasource.username", postgreSQL::getUsername);
+    registry.add("spring.datasource.password", postgreSQL::getPassword);
+  }
+
 
   @DisplayName("create should return a bad request when the username is duplicated")
   @Test
