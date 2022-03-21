@@ -3,7 +3,8 @@ package com.weareadaptive.auction.model;
 
 import static org.apache.logging.log4j.util.Strings.isBlank;
 
-public class User implements Entity {
+@javax.persistence.Entity
+public class User {
   private final int id;
   private final String username;
   private final String password;
@@ -11,8 +12,6 @@ public class User implements Entity {
   private String firstName;
   private String lastName;
   private String organisation;
-  private String phone;
-  private String email;
   private boolean blocked;
 
   public User(
